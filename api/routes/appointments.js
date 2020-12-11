@@ -37,39 +37,6 @@ router.get('/vehicles', (req, res, next) => {
     })
 });
 
-router.get('/attended', (req, res, next) => {
-    debugger;
-
-    const functionName = "fleetmanager.fn_get_attended_appointments";
-
-    return new Promise((resolve, reject) => {
-
-        postgres.callFnWithResults(functionName)
-            .then((data) => {
-                debugger;
-                console.log(data);
-                res.status(200).json({
-                    message: 'Handling GET requests to /appointments',
-                    chatusers: data,
-                    status: true
-                });
-                resolve(data);
-
-            })
-            .catch((error => {
-                debugger;
-                console.log(error);
-                res.status(500).json({
-                    message: 'bad Request',
-                    error: error,
-                    status: false
-                });
-                reject(error);
-            }))
-
-    })
-});
-
 
 router.get('/:userId', (req, res, next) => {
 
@@ -313,6 +280,60 @@ router.patch('/clientcancel/:number/:registration', (req, res, next) => {
    
             res.status(201).json({
                 message: 'Appointment cancelled successfully',
+                cancelled: data
+            });
+            resolve(data);
+
+        })
+        .catch((error) => {
+            debugger;
+            console.log(error);
+            res.status(500).json({
+                message: 'bad Request',
+                error: error,
+                status: false
+            });
+            reject(error);
+        })
+    })
+});
+
+
+router.patch('/attendappointment/:registration', (req, res, next) => {
+    debugger;
+    return new Promise((resolve, reject) => {
+        let placeholder = '';
+        let count = 1;
+        const params = Object.keys(req.params).map(key => [(key), req.params[key]]);
+
+        const paramsvalues = Object.keys(req.params).map(key => req.params[key]);
+
+        if (Array.isArray(params)) {
+            params.forEach(() => {
+                placeholder += `$${count},`;
+                count += 1;
+            });
+        } 
+
+        placeholder = placeholder.replace(/,\s*$/, ''); 
+
+        const functionName = `fleetmanager.fn_attend_appointment`;
+
+        const sql = `${functionName}(${placeholder})`;
+
+        // const funcionName = `mychat.fn_add_users($1,$2)`
+
+        // callFnWithResultsAdd(sql, paramsvalues)
+
+
+        // req.body.added_by = parseInt(req.body.added_by); 
+        postgres.callFnWithResultsAdd(sql, paramsvalues)
+        .then((data) => {
+            debugger;
+            console.log(data);
+   
+            res.status(201).json({
+                message: 'Appointment attended successfully',
                 cancelled: data
             });
             resolve(data);
